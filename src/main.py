@@ -10,7 +10,7 @@ import sys
 import argparse
 from dotenv import load_dotenv
 
-from src.mcp_server import MCPServer
+from .mcp_server import MCPServer
 
 
 def main():

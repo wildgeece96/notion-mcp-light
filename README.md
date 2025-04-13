@@ -30,7 +30,11 @@ NotionMCP Lightは、Notion APIを使用してMarkdownファイルとNotionペ�
 ### 依存関係のインストール
 
 ```bash
-pip install -r requirements.txt
+# uvがインストールされていない場合は先にインストール
+# pip install uv
+
+# 依存関係のインストール
+uv sync
 ```
 
 ### Notion API Tokenの設定
@@ -46,6 +50,20 @@ NOTION_TOKEN=your_notion_api_token
 ## 使い方
 
 ### MCPサーバーの起動
+
+#### uvを使用する場合（推奨）
+
+```bash
+uv run python -m src.main
+```
+
+または、トークンを直接指定する場合：
+
+```bash
+uv run python -m src.main --token your_notion_api_token
+```
+
+#### 通常のPythonを使用する場合
 
 ```bash
 python -m src.main
