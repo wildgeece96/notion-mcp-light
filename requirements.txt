@@ -1,8 +1,0 @@
-# Requirements for the Python project
-# Add your project dependencies here.
-pytest
-notion-client
-mcp[cli]
-markdown
-mistune
-python-dotenv
