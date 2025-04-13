@@ -6,7 +6,6 @@ NotionのAPIを利用してMarkdownファイルのアップロードとNotionペ
 
 import os
 from typing import List, Dict, Any, Optional
-import json
 from pathlib import Path
 from notion_client import Client
 from dotenv import load_dotenv

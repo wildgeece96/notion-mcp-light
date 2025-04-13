@@ -5,11 +5,10 @@ Model Context Protocol (MCP)に準拠したサーバーを提供します。
 JSON-RPC over stdioを使用してクライアントからのリクエストを処理します。
 """
 
-import os
 import sys
 import json
 import logging
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 from pathlib import Path
 
 from src.notion_client import NotionClient
@@ -342,7 +341,7 @@ class MCPServer:
                     {"content": [{"type": "text", "text": f"Markdownファイルをアップロードしました。ページID: {page_id}"}]},
                     request_id,
                 )
-            except FileNotFoundError as e:
+            except FileNotFoundError:
                 self._send_result(
                     {
                         "content": [{"type": "text", "text": f"ファイルが見つかりません: {arguments.get('filepath')}"}],

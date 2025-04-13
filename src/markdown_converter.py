@@ -5,7 +5,6 @@ NotionのブロックとMarkdown形式の相互変換を行うクラスを提供
 """
 
 from typing import List, Dict, Any
-import markdown
 import mistune
 
 
