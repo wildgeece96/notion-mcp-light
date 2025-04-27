@@ -285,14 +285,17 @@ class MCPServer:
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "filepath": {"type": "string", "description": "アップロードするMarkdownファイルのパス"},
+                        "filepath": {
+                            "type": "string",
+                            "description": "アップロードするMarkdownファイルのパス。絶対パスを指定してください。",
+                        },
                         "database_id": {
                             "type": "string",
-                            "description": "アップロード先のデータベースID",
+                            "description": "アップロード先のデータベースID。URLでなくIDです。",
                         },
                         "page_id": {
                             "type": "string",
-                            "description": "親ページID（database_idが指定されていない場合に使用）",
+                            "description": "親ページID（database_idが指定されていない場合に使用）。URLでなくIDです。",
                         },
                     },
                     "required": ["filepath"],
@@ -304,8 +307,8 @@ class MCPServer:
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "page_id": {"type": "string", "description": "ダウンロードするNotionページのID"},
-                        "output_path": {"type": "string", "description": "出力先のファイルパス"},
+                        "page_id": {"type": "string", "description": "ダウンロードするNotionページのID。URLでなくIDです。"},
+                        "output_path": {"type": "string", "description": "出力先のファイルパス。絶対ファイルパス。"},
                     },
                     "required": ["page_id", "output_path"],
                 },
