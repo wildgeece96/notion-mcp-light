@@ -141,3 +141,171 @@ class MCPServer:
 | 実装 | 各モジュールの開発 | 第2-3週 |
 | テスト | 単体・統合テスト | 第4週 |
 | リリース | ドキュメント整備・デプロイ対応 | 第5週 |
+
+## 3. Notion MCPサーバー比較
+
+### 3.1 公式Notion MCPサーバーのシーケンス図（Markdown→Notion書き込み）
+
+
+```mermaid
+sequenceDiagram
+    participant LLM as LLM
+    participant MCP as 公式Notion MCPサーバー
+    participant MD as Markdownファイル
+    participant API as Notion API
+    participant Notion as Notionページ
+
+    %% Markdownからページ作成のケース
+    LLM->>MD: Markdownファイル読み込み
+    MD-->>LLM: Markdown内容
+    Note over LLM: Markdownをブロックに分割
+
+    LLM->>MCP: ブロック1のページ作成リクエスト
+    Note over LLM,MCP: LLMトークン消費量大
+    MCP->>API: ブロック1のページ作成API呼び出し
+    API->>Notion: ブロック1を作成
+    Notion-->>API: 作成完了
+    API-->>MCP: レスポンス
+    MCP-->>LLM: 結果返却
+    Note over LLM,MCP: LLMトークン消費量大
+
+    LLM->>MCP: ブロック2のページ作成リクエスト
+    Note over LLM,MCP: LLMトークン消費量大
+    MCP->>API: ブロック2のページ作成API呼び出し
+    API->>Notion: ブロック2を作成
+    Notion-->>API: 作成完了
+    API-->>MCP: レスポンス
+    MCP-->>LLM: 結果返却
+    Note over LLM,MCP: LLMトークン消費量大
+
+    Note over LLM,Notion: ブロック3...Nについても同様に繰り返し
+```
+
+
+### 3.2 NotionMCP Lightのシーケンス図（Markdown→Notion書き込み）
+
+
+```mermaid
+sequenceDiagram
+    participant LLM as LLM
+    participant MCP as NotionMCP Light
+    participant MD as Markdownファイル
+    participant API as Notion API
+    participant Notion as Notionページ
+
+    %% Markdownからページ作成のケース
+    LLM->>MCP: uploadMarkdownリクエスト
+    Note over LLM,MCP: LLMトークン消費量小
+    MCP->>MD: Markdownファイル読み込み
+    MD-->>MCP: Markdown内容
+    MCP->>MCP: MarkdownConverterでブロック変換
+    MCP->>API: NotionClientでページ作成API呼び出し
+    API->>Notion: ページ作成
+    Notion-->>API: 作成完了
+    API-->>MCP: レスポンス
+    MCP-->>LLM: 結果返却
+    Note over LLM,MCP: LLMトークン消費量小
+```
+
+
+### 3.3 主な違い
+
+1. **LLMトークン消費**:
+   - 公式MCPサーバー: ブロックごとに処理するため、LLMトークン消費量が大きい
+   - NotionMCP Light: 一括処理のため、LLMトークン消費量が小さい
+
+2. **処理方法**:
+   - 公式MCPサーバー: LLMがMarkdownを読み込み、ブロック単位で何度もAPIを呼び出す
+   - NotionMCP Light: MCPサーバーがMarkdownファイル全体を一括処理
+
+3. **効率性**:
+   - 公式MCPサーバー: ブロックごとの処理によりトークン消費が多く、API呼び出しも複数回
+   - NotionMCP Light: ファイル操作による直接同期で効率的、API呼び出しは1回
+
+4. **データフロー**:
+   - 公式MCPサーバー: LLM→Markdownファイル→LLM→MCP→Notion API（ブロックごとに繰り返し）
+   - NotionMCP Light: LLM→MCP→Markdownファイル→Notion API（一括処理）
+
+## 3. Notion MCPサーバー比較
+
+### 3.1 公式Notion MCPサーバーのシーケンス図（Markdown→Notion書き込み）
+
+
+```mermaid
+sequenceDiagram
+    participant LLM as LLM
+    participant MCP as 公式Notion MCPサーバー
+    participant MD as Markdownファイル
+    participant API as Notion API
+    participant Notion as Notionページ
+
+    %% Markdownからページ作成のケース
+    LLM->>MD: Markdownファイル読み込み
+    MD-->>LLM: Markdown内容
+    Note over LLM: Markdownをブロックに分割
+
+    LLM->>MCP: ブロック1のページ作成リクエスト
+    Note over LLM,MCP: LLMトークン消費量大
+    MCP->>API: ブロック1のページ作成API呼び出し
+    API->>Notion: ブロック1を作成
+    Notion-->>API: 作成完了
+    API-->>MCP: レスポンス
+    MCP-->>LLM: 結果返却
+    Note over LLM,MCP: LLMトークン消費量大
+
+    LLM->>MCP: ブロック2のページ作成リクエスト
+    Note over LLM,MCP: LLMトークン消費量大
+    MCP->>API: ブロック2のページ作成API呼び出し
+    API->>Notion: ブロック2を作成
+    Notion-->>API: 作成完了
+    API-->>MCP: レスポンス
+    MCP-->>LLM: 結果返却
+    Note over LLM,MCP: LLMトークン消費量大
+
+    Note over LLM,Notion: ブロック3...Nについても同様に繰り返し
+```
+
+
+### 3.2 NotionMCP Lightのシーケンス図（Markdown→Notion書き込み）
+
+
+```mermaid
+sequenceDiagram
+    participant LLM as LLM
+    participant MCP as NotionMCP Light
+    participant MD as Markdownファイル
+    participant API as Notion API
+    participant Notion as Notionページ
+
+    %% Markdownからページ作成のケース
+    LLM->>MCP: uploadMarkdownリクエスト
+    Note over LLM,MCP: LLMトークン消費量小
+    MCP->>MD: Markdownファイル読み込み
+    MD-->>MCP: Markdown内容
+    MCP->>MCP: MarkdownConverterでブロック変換
+    MCP->>API: NotionClientでページ作成API呼び出し
+    API->>Notion: ページ作成
+    Notion-->>API: 作成完了
+    API-->>MCP: レスポンス
+    MCP-->>LLM: 結果返却
+    Note over LLM,MCP: LLMトークン消費量小
+```
+
+
+### 3.3 主な違い
+
+1. **LLMトークン消費**:
+   - 公式MCPサーバー: ブロックごとに処理するため、LLMトークン消費量が大きい
+   - NotionMCP Light: 一括処理のため、LLMトークン消費量が小さい
+
+2. **処理方法**:
+   - 公式MCPサーバー: LLMがMarkdownを読み込み、ブロック単位で何度もAPIを呼び出す
+   - NotionMCP Light: MCPサーバーがMarkdownファイル全体を一括処理
+
+3. **効率性**:
+   - 公式MCPサーバー: ブロックごとの処理によりトークン消費が多く、API呼び出しも複数回
+   - NotionMCP Light: ファイル操作による直接同期で効率的、API呼び出しは1回
+
+4. **データフロー**:
+   - 公式MCPサーバー: LLM→Markdownファイル→LLM→MCP→Notion API（ブロックごとに繰り返し）
+   - NotionMCP Light: LLM→MCP→Markdownファイル→Notion API（一括処理）
