@@ -160,6 +160,7 @@ class MCPServer:
             "protocolVersion": "2024-11-05",
             "serverInfo": {"name": "notion-mcp-light", "version": "0.1.0", "description": "Notion MCP Light Server"},
             "capabilities": {"tools": {"listChanged": False}, "resources": {"listChanged": False, "subscribe": False}},
+            "instructions": "NotionMCP Lightを使用する際の注意点:\n1. filepathパラメータには絶対パスを使用してください。相対パスを使用すると正しく処理できない場合があります。\n2. page_idパラメータにはNotionページIDを使用してください。URLではなくページIDのみを指定してください。\n3. Notionページのページ形式のURLからページIDを抽出するには、URLの最後の部分（https://www.notion.so/xxx/yyy-zzz の zzz部分）を使用してください。\n4. データベースIDを指定する場合も同様に、URLではなくIDのみを使用してください。",
         }
 
         self._send_result(response, request_id)
