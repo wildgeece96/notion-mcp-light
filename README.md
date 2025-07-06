@@ -77,28 +77,29 @@ python -m src.main --token your_notion_api_token
 
 ### Cline/Cursorでの設定
 
-Cline/CursorなどのAIツールでNotionMCP Lightを使用するには、`mcp_settings.json`ファイルに以下のような設定を追加します：
+Cline/Cursor/Claude CodeなどのAIコーディングツールでNotionMCP Lightを使用するには、各ツールのMCPサーバ設定を行うJSONファイルに以下のような設定を追加します：
 
 ```json
-"notion-mcp-light": {
-  "command": "uv",
-  "args": [
-    "run",
-    "--directory",
-    "/path/to/notion-mcp-light",
-    "python",
-    "-m",
-    "src.main"
-  ],
-  "env": {
-    "NOTION_TOKEN": "your_notion_api_token"
-  },
-  "disabled": false,
-  "alwaysAllow": []
+{
+  "mcpServers": {
+    "notion-mcp-light": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/path/to/notion-mcp-light",
+        "-m",
+        "src.main"
+      ],
+      "env": {
+        "NOTION_TOKEN": "your_notion_api_token"
+      }
+    }
+  }
 }
 ```
 
-`/path/to/notion-mcp-light`は、NotionMCP Lightのインストールディレクトリに置き換えてください。
+`/path/to/notion-mcp-light`は、NotionMCP Lightのインストールディレクトリ、`your_notion_api_token`は、NotionのAPIトークンに置き換えてください。
 
 ## MCPツールの使用方法
 
