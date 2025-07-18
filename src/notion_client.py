@@ -9,7 +9,7 @@ import time
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 from notion_client import Client
-from notion_client.errors import APIError, RequestTimeoutError
+from notion_client.errors import APIResponseError, RequestTimeoutError
 from dotenv import load_dotenv
 
 from src.markdown_converter import MarkdownConverter
@@ -197,7 +197,7 @@ class NotionClient:
                 if i < len(chunks) - 1:  # 最後のチャンク以外
                     time.sleep(self.rate_limit_delay)
                     
-            except (APIError, RequestTimeoutError) as e:
+            except (APIResponseError, RequestTimeoutError) as e:
                 raise NotionChunkingError(
                     f"ブロックの追加中にエラーが発生しました "
                     f"(chunk {i+1}/{len(chunks)}): {str(e)}"
@@ -258,7 +258,7 @@ class NotionClient:
                 existing_blocks.extend(response["results"])
                 has_more = response["has_more"]
                 cursor = response.get("next_cursor")
-            except (APIError, RequestTimeoutError) as e:
+            except (APIResponseError, RequestTimeoutError) as e:
                 raise NotionChunkingError(
                     f"ブロックの取得に失敗しました: {str(e)}"
                 )
@@ -268,7 +268,7 @@ class NotionClient:
             try:
                 self.client.blocks.delete(block_id=block["id"])
                 time.sleep(0.1)  # 削除リクエスト間の待機
-            except (APIError, RequestTimeoutError) as e:
+            except (APIResponseError, RequestTimeoutError) as e:
                 print(
                     f"Warning: ブロック {block['id']} の削除に失敗しました: {str(e)}"
                 )
