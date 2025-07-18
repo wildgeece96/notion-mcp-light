@@ -138,6 +138,10 @@ class MCPServer:
             self._handle_upload_markdown(params, request_id)
         elif method == "downloadMarkdown":
             self._handle_download_markdown(params, request_id)
+        elif method == "appendToPage":
+            self._handle_append_to_page(params, request_id)
+        elif method == "updatePageContent":
+            self._handle_update_page_content(params, request_id)
         else:
             self._send_error(-32601, f"Method not found: {method}", request_id)
 
@@ -191,10 +195,12 @@ class MCPServer:
 
         filepath = params["filepath"]
         database_id = params.get("database_id")
+        page_id_param = params.get("page_id")
 
         try:
-            # Markdownをアップロード
-            page_id = self.notion_client.upload_markdown(filepath, database_id)
+            # Markdownをアップロード（自動的にチャンク処理判定）
+            result_page_id = self.notion_client.upload_markdown(filepath, database_id, page_id_param)
+            page_id = result_page_id
 
             # レスポンスを送信
             self._send_result({"page_id": page_id}, request_id)
@@ -234,6 +240,66 @@ class MCPServer:
 
         except Exception as e:
             self._send_error(-32603, f"Failed to download markdown: {str(e)}", request_id)
+            
+    def _handle_append_to_page(self, params: Dict[str, Any], request_id: Any):
+        """
+        appendToPageメソッドを処理します。
+
+        Args:
+            params: リクエストパラメータ
+            request_id: リクエストID
+        """
+        # パラメータのバリデーション
+        if "page_id" not in params:
+            self._send_error(-32602, "Invalid params: page_id is required", request_id)
+            return
+            
+        if "content" not in params:
+            self._send_error(-32602, "Invalid params: content is required", request_id)
+            return
+
+        page_id = params["page_id"]
+        content = params["content"]
+
+        try:
+            # ページにコンテンツを追記
+            self.notion_client.append_to_page(page_id, content)
+
+            # レスポンスを送信
+            self._send_result({"success": True, "message": "Content appended successfully"}, request_id)
+
+        except Exception as e:
+            self._send_error(-32603, f"Failed to append to page: {str(e)}", request_id)
+            
+    def _handle_update_page_content(self, params: Dict[str, Any], request_id: Any):
+        """
+        updatePageContentメソッドを処理します。
+
+        Args:
+            params: リクエストパラメータ
+            request_id: リクエストID
+        """
+        # パラメータのバリデーション
+        if "page_id" not in params:
+            self._send_error(-32602, "Invalid params: page_id is required", request_id)
+            return
+            
+        if "content" not in params:
+            self._send_error(-32602, "Invalid params: content is required", request_id)
+            return
+
+        page_id = params["page_id"]
+        content = params["content"]
+
+        try:
+            # ページの内容を更新
+            self.notion_client.update_page_content(page_id, content)
+
+            # レスポンスを送信
+            self._send_result({"success": True, "message": "Page content updated successfully"}, request_id)
+
+        except Exception as e:
+            self._send_error(-32603, f"Failed to update page content: {str(e)}", request_id)
 
     def _send_result(self, result: Any, request_id: Any):
         """
@@ -281,7 +347,7 @@ class MCPServer:
         return [
             {
                 "name": "uploadMarkdown",
-                "description": "Markdownファイルをアップロードし、Notionページとして作成します",
+                "description": "Markdownファイルをアップロードし、Notionページとして作成します。100ブロックを超える場合は自動的にチャンク処理されます。",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -311,6 +377,42 @@ class MCPServer:
                         "output_path": {"type": "string", "description": "出力先のファイルパス。絶対ファイルパス。"},
                     },
                     "required": ["page_id", "output_path"],
+                },
+            },
+            {
+                "name": "appendToPage",
+                "description": "既存のNotionページにMarkdownコンテンツを追記します（100ブロック制限対応済み）",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "page_id": {
+                            "type": "string",
+                            "description": "追記先のNotionページのID。URLでなくIDです。",
+                        },
+                        "content": {
+                            "type": "string",
+                            "description": "追記するMarkdownコンテンツ",
+                        },
+                    },
+                    "required": ["page_id", "content"],
+                },
+            },
+            {
+                "name": "updatePageContent",
+                "description": "既存のNotionページの内容を完全に置き換えます（100ブロック制限対応済み）",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "page_id": {
+                            "type": "string",
+                            "description": "更新するNotionページのID。URLでなくIDです。",
+                        },
+                        "content": {
+                            "type": "string",
+                            "description": "新しいMarkdownコンテンツ",
+                        },
+                    },
+                    "required": ["page_id", "content"],
                 },
             },
         ]
@@ -376,6 +478,44 @@ class MCPServer:
                 self._send_result(
                     {
                         "content": [{"type": "text", "text": f"Notionページのダウンロードに失敗しました: {str(e)}"}],
+                        "isError": True,
+                    },
+                    request_id,
+                )
+        elif tool_name == "appendToPage":
+            try:
+                self.notion_client.append_to_page(arguments["page_id"], arguments["content"])
+                self._send_result(
+                    {
+                        "content": [
+                            {"type": "text", "text": f"ページにコンテンツを追記しました。ページID: {arguments['page_id']}"}
+                        ]
+                    },
+                    request_id,
+                )
+            except Exception as e:
+                self._send_result(
+                    {
+                        "content": [{"type": "text", "text": f"ページへの追記に失敗しました: {str(e)}"}],
+                        "isError": True,
+                    },
+                    request_id,
+                )
+        elif tool_name == "updatePageContent":
+            try:
+                self.notion_client.update_page_content(arguments["page_id"], arguments["content"])
+                self._send_result(
+                    {
+                        "content": [
+                            {"type": "text", "text": f"ページの内容を更新しました。ページID: {arguments['page_id']}"}
+                        ]
+                    },
+                    request_id,
+                )
+            except Exception as e:
+                self._send_result(
+                    {
+                        "content": [{"type": "text", "text": f"ページの更新に失敗しました: {str(e)}"}],
                         "isError": True,
                     },
                     request_id,
